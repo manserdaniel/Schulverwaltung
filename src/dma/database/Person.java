@@ -1,4 +1,4 @@
-package com.company;
+package dma.database;
 
 public class Person {
     private int id = 0;
@@ -7,6 +7,9 @@ public class Person {
     private String username = "";
     private String password = "";
     private int userLevel = 0;
+
+    public Person() {
+    }
 
     public int getId() {
         return id;

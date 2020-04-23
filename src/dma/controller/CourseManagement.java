@@ -1,39 +1,38 @@
-package com.company;
+package dma.controller;
 
+import dma.database.Course;
+import dma.database.DatabaseConnector;
+
+import javax.xml.crypto.Data;
+import java.security.DrbgParameters;
 import java.sql.*;
+import java.util.LinkedList;
 
 public class CourseManagement {
 
-    private final DatabaseConnector dbConnector = new DatabaseConnector("jdbc:mysql://localhost:3306/schulverwaltung?user=root");
+    private final DatabaseConnector dbConnector = DatabaseConnector.getInstance();
 
+    LinkedList<Course> courses = new LinkedList<Course>();
 
-    public void createCourse(String name, Integer maxAmountSeats, Integer teacherId) {
+    public void getCoursesFromDB() {
         String sql;
-
-        sql = "INSERT INTO course (name, max_amount_seats, teacher_id, seats_used) VALUE ('" +
-                name + "','" +
-                maxAmountSeats + "','" +
-                teacherId + "', 0);";
-
-        dbConnector.update(sql);
-    }
-
-    public void printCourse() {
         ResultSet rs;
-        String sql;
+
+        Course tempCourse; // is needed because I have the ID on auto_increment
 
         sql = "SELECT * FROM course";
         rs = dbConnector.fetchData(sql);
 
-        System.out.println("ID - Name - Plätze belegt");
+        if (courses != null) {
+            courses.clear();
+        }
 
         try {
             while (rs.next()) {
-                Integer id = rs.getInt("id");
-                String name = rs.getString("name");
-                int maxSeats = rs.getInt("max_amount_seats");
-                int seatsUsed = rs.getInt("seats_used");
-                System.out.println(id + " " + name + " " + seatsUsed + "/" + maxSeats);
+                tempCourse = new Course(rs.getString("name"), rs.getInt("max_amount_seats"), rs.getInt("teacher_id"));
+                tempCourse.setSeatsUsed(rs.getInt("seats_used"));
+                tempCourse.setId(rs.getInt("id"));
+                courses.add(tempCourse);
             }
 
         } catch (SQLException throwables) {
@@ -41,49 +40,62 @@ public class CourseManagement {
         }
     }
 
-    public void printCourseTeacher(Integer teacherId) {
-        ResultSet rs;
+    public void insertCourse(Course course) {
         String sql;
 
-        sql = "SELECT id, name, max_amount_seats, seats_used FROM course WHERE teacher_id = '" + teacherId + "';";
-        rs = dbConnector.fetchData(sql);
+        sql = "INSERT INTO course (name, max_amount_seats, teacher_id, seats_used) VALUE ('" +
+                course.getName() + "','" +
+                course.getMaxAmountSeats() + "','" +
+                course.getTeacherId() + "', 0);";
+
+        dbConnector.update(sql);
+    }
+
+    public void printAllCourses() {
 
         System.out.println("ID - Name - Plätze belegt");
 
-        try {
-            while (rs.next()) {
-                Integer id = rs.getInt("id");
-                String name = rs.getString("name");
-                int maxSeats = rs.getInt("max_amount_seats");
-                int seatsUsed = rs.getInt("seats_used");
-                System.out.println(id + " " + name + " " + seatsUsed + "/" + maxSeats);
-            }
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        for (Course tempCourse : courses) {
+            printCourse(tempCourse);
         }
+    }
+
+    public void printCourseTeacher(Integer teacherId) {
+
+        System.out.println("ID - Name - Plätze belegt");
+
+        for (Course tempCourse : courses) {
+            if (tempCourse.getTeacherId() == teacherId)
+                printCourse(tempCourse);
+        }
+    }
+
+    private void printCourse(Course tempCourse) {
+        System.out.println(tempCourse.getId() + " - "
+                + tempCourse.getName() + " - "
+                + tempCourse.getSeatsUsed() + "/"
+                + tempCourse.getMaxAmountSeats());
     }
 
     public void printCourseTeacherStudents(Integer teacherId, Integer courseId) {
         ResultSet rs;
         String sql;
 
-        sql = "SELECT course_id, name, first_name, last_name FROM student_course " +
+        sql = "SELECT student_id, name, first_name, last_name FROM student_course " +
                 "INNER JOIN person ON person.id = student_course.student_id " +
                 "INNER JOIN course on course.id = student_course.course_id " +
                 "WHERE course.teacher_id = '" + teacherId + "' AND course_id = '" + courseId + "'";
 
         rs = dbConnector.fetchData(sql);
 
-        System.out.println("Kurs ID - Kurs - Student");
+        System.out.println("ID - Student");
 
         try {
             while (rs.next()) {
-                Integer id = rs.getInt("course_id");
-                String name = rs.getString("name");
+                Integer id = rs.getInt("student_id");
                 String firstName = rs.getString("first_name");
                 String lastName = rs.getString("last_name");
-                System.out.println(id + " - " + name + " - " + firstName + " " + lastName);
+                System.out.println(id + " - " + firstName + " " + lastName);
             }
 
         } catch (SQLException throwables) {

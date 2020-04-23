@@ -1,4 +1,4 @@
-package com.company;
+package dma.database;
 
 import java.sql.*;
 
@@ -7,9 +7,17 @@ public class DatabaseConnector {
     private Connection connection = null;
     private Statement statement = null;
     private final String url;
+    private static DatabaseConnector instance;
 
-    DatabaseConnector(String url) {
+    private DatabaseConnector(String url) {
         this.url = url;
+    }
+
+    public static DatabaseConnector getInstance() {
+        if (instance == null) {
+            instance = new DatabaseConnector("jdbc:mysql://localhost:3306/schulverwaltung?user=root");
+        }
+        return instance;
     }
 
     private void buildConnection() {
@@ -39,6 +47,7 @@ public class DatabaseConnector {
 
     /**
      * Make sure to call closeConnection() after handling the result set
+     *
      * @param sql
      * @return
      */
@@ -78,13 +87,10 @@ public class DatabaseConnector {
         buildConnection();
         try {
             int result = statement.executeUpdate(sql);
-            if (result == 0) {
-                System.out.println("update successful");
-                return false;
-            } else {
-                System.out.println("update failed");
-                return true;
-            }
+
+            System.out.println("update successful");
+            return false;
+
         } catch (SQLException e) {
             System.out.println("could not update data");
             e.printStackTrace();

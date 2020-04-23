@@ -1,4 +1,9 @@
-package com.company;
+package dma;
+
+import dma.controller.CourseManagement;
+import dma.controller.UserManagement;
+import dma.database.Course;
+import dma.database.Person;
 
 import java.util.Scanner;
 
@@ -11,22 +16,24 @@ public class Main {
         UserManagement userManagement = new UserManagement();
         CourseManagement courseManagement = new CourseManagement();
 
-        Person actualUser = new Person();
         Person newUser = new Person();
 
-        boolean loginSuccessful;
         boolean programRunning = true;
 
         while (programRunning) {
 
+            courseManagement.getCoursesFromDB();
+            userManagement.getUsersFromDB();
+
             System.out.println("Wilkommen im Schulverwaltungssystem. Bitte melden sie sich mit dem Username und Passwort an: ");
 
-            String actualUsername = scanner.nextLine();
-            String actualPassword = scanner.nextLine();
+            Person actualUser = new Person();
+            actualUser.setUsername(scanner.nextLine());
+            actualUser.setPassword(scanner.nextLine());
 
-            loginSuccessful = userManagement.userLogin(actualUsername, actualPassword, actualUser);
+            actualUser = userManagement.userLogin(actualUser);
 
-            while (loginSuccessful) {
+            while (actualUser != null) {
 
                 int actualUserLevel = actualUser.getUserLevel();
                 int answerUserInt;
@@ -43,15 +50,17 @@ public class Main {
 
                         if (answerUserInt == 1) {
                             createAndAddNewUser(userManagement, newUser);
+                            userManagement.getUsersFromDB();
 
                         } else if (answerUserInt == 2) {
                             createAndAddNewCourse(userManagement, courseManagement);
+                            courseManagement.getCoursesFromDB();
 
                         } else if (answerUserInt == 3) {
-                            loginSuccessful = false;
+                            actualUser = null;
 
                         } else if (answerUserInt == 4) {
-                            loginSuccessful = false;
+                            actualUser = null;
                             programRunning = false;
 
                         } else {
@@ -77,12 +86,13 @@ public class Main {
 
                         } else if (answerUserInt == 3) {
                             setMarkForStudent(courseManagement, actualUser);
+                            courseManagement.getCoursesFromDB();
 
                         } else if (answerUserInt == 4) {
-                            loginSuccessful = false;
+                            actualUser = null;
 
                         } else if (answerUserInt == 5) {
-                            loginSuccessful = false;
+                            actualUser = null;
                             programRunning = false;
 
                         } else {
@@ -101,20 +111,21 @@ public class Main {
                         answerUserInt = scannerInt.nextInt();
 
                         if (answerUserInt == 1) {
-                            courseManagement.printCourse();
+                            courseManagement.printAllCourses();
 
                         } else if (answerUserInt == 2) {
 
                             selectAndSignUpForACourse(courseManagement, actualUser);
+                            courseManagement.getCoursesFromDB();
 
                         }else if (answerUserInt == 3) {
                             courseManagement.printStudentCourse(actualUser.getId());
 
                         } else if (answerUserInt == 4) {
-                            loginSuccessful = false;
+                            actualUser = null;
 
                         } else if (answerUserInt == 5) {
-                            loginSuccessful = false;
+                            actualUser = null;
                             programRunning = false;
 
                         } else {
@@ -180,7 +191,7 @@ public class Main {
         userManagement.printAllUsersOfUserLevel(2);
         Integer teacherId = scannerInt.nextInt();
 
-        courseManagement.createCourse(newCourseName, newCourseMaxAmountStudents, teacherId);
+        courseManagement.insertCourse(new Course(newCourseName, newCourseMaxAmountStudents, teacherId));
     }
 
     private static void createAndAddNewUser(UserManagement userManagement, Person newUser) {
@@ -202,6 +213,6 @@ public class Main {
         System.out.println("Userlevel:");
         newUser.setUserLevel(scannerInt.nextInt());
 
-        userManagement.addNewUser(newUser);
+        userManagement.insertNewUser(newUser);
     }
 }
